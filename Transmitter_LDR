@@ -1,0 +1,35 @@
+// TRANSMITTER ONLY - Upload to first ESP-C3
+#include <WiFi.h>
+#include <esp_now.h>
+
+uint8_t broadcastAddress[] = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF};
+const int LDR_PIN = 4;
+bool lastState = false;
+
+void setup() {
+  Serial.begin(115200);
+  WiFi.mode(WIFI_STA);
+  esp_now_init();
+  
+  esp_now_peer_info_t peerInfo = {};
+  memcpy(peerInfo.peer_addr, broadcastAddress, 6);
+  esp_now_add_peer(&peerInfo);
+  
+  Serial.println("Transmitter ready");
+}
+
+void loop() {
+  int ldr = analogRead(LDR_PIN);
+  bool isDark = ldr < 1500; // Adjust threshold
+  
+  // Only send if state changed
+  if (isDark != lastState) {
+    uint8_t data = isDark ? 1 : 0;
+    esp_now_send(broadcastAddress, &data, 1);
+    Serial.print("Sent: ");
+    Serial.println(isDark ? "ON" : "OFF");
+    lastState = isDark;
+  }
+  
+  delay(100);
+}
