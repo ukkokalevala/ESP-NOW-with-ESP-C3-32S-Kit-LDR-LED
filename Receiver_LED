@@ -1,0 +1,28 @@
+/ RECEIVER ONLY - Upload to second ESP-C3
+#include <WiFi.h>
+#include <esp_now.h>
+
+const int LED_PIN = 6; // Your working LED pin
+
+void OnDataRecv(const esp_now_recv_info_t* info, const uint8_t* data, int len) {
+  if (len > 0) {
+    digitalWrite(LED_PIN, data[0]); // Direct control
+  }
+}
+
+void setup() {
+  Serial.begin(115200);
+  pinMode(LED_PIN, OUTPUT);
+  digitalWrite(LED_PIN, LOW);
+  
+  WiFi.mode(WIFI_STA);
+  esp_now_init();
+  esp_now_register_recv_cb(OnDataRecv);
+  
+  Serial.println("Receiver ready");
+}
+
+void loop() {
+  // Nothing needed here
+  delay(1000);
+}
